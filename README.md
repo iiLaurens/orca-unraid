@@ -27,6 +27,19 @@ The image is pulled from GHCR; nothing is built on the Unraid server.
 - Docker CLI, using Docker's default `/var/run/docker.sock`
 - `git`, `gh`, Node 24, Python 3, build tools, `ripgrep`
 
+## Experimental Cloud VM skill
+
+The **Settings → Experimental → Cloud VM** pane expects the official `orca-per-workspace-env` skill.
+Its Install button opens an interactive skills-CLI prompt, which a headless container cannot answer.
+The image seeds the skill at build time, and the entrypoint copies it into
+`/config/.agents/skills` on first start if it is missing.
+
+To refresh it manually:
+
+```bash
+docker exec -u orca Orca orca-ide skills install --skill orca-per-workspace-env
+```
+
 ## Persistence
 
 The image expects these mounts:

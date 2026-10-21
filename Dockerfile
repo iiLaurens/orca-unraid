@@ -126,6 +126,24 @@ RUN set -eux; \
     test -n "$template"; \
     orca-ide --version
 
+# Experimental Cloud VM feature: the Settings -> Experimental -> Cloud VM pane expects the official
+# orca-per-workspace-env skill. Its Install button opens an interactive skills CLI prompt that a
+# headless container cannot answer, so seed the skill at build time and let the entrypoint copy it
+# into the mounted skills dir when missing.
+RUN set -eux; \
+    echo "build refresh: ${BUILD_REFRESH}"; \
+    seed_home=/opt/orca-seed-home; \
+    mkdir -p "$seed_home/profile"; \
+    HOME="$seed_home" \
+    ORCA_USER_DATA_PATH="$seed_home/profile" \
+    XDG_CONFIG_HOME="$seed_home/.config" \
+    XDG_CACHE_HOME="$seed_home/.cache" \
+    XDG_DATA_HOME="$seed_home/.local/share" \
+      orca-ide skills install --skill orca-per-workspace-env --agent universal; \
+    mkdir -p /opt/orca-seed-skills; \
+    cp -R "$seed_home/.agents/skills/orca-per-workspace-env" /opt/orca-seed-skills/; \
+    rm -rf "$seed_home"
+
 # The runtime user defaults to Unraid's nobody/users (99/100). The entrypoint can remap it.
 RUN groupadd -o --gid 100 orca \
  && useradd -o --uid 99 --gid orca --home-dir /config --shell /bin/bash --no-create-home orca \

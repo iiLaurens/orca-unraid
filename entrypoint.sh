@@ -62,6 +62,18 @@ if [ "$(id -u)" -eq 0 ]; then
     chown "$PUID:$PGID" "$owner_marker"
   fi
 
+  seed_skill=/opt/orca-seed-skills/orca-per-workspace-env
+  dest_skill=/config/.agents/skills/orca-per-workspace-env
+  if [ -d "$seed_skill" ] && [ ! -e "$dest_skill/SKILL.md" ]; then
+    if [ -w /config/.agents/skills ]; then
+      cp -R "$seed_skill" /config/.agents/skills/
+      chown -R "$PUID:$PGID" "$dest_skill"
+      log "seeded the official Cloud VM skill"
+    else
+      log "skills dir is not writable; install orca-per-workspace-env manually"
+    fi
+  fi
+
   exec runuser --user orca --preserve-environment -- "$0" "$@"
 fi
 
