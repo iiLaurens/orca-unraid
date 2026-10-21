@@ -1,0 +1,64 @@
+name: Build image
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Refresh Orca and Pi from their latest releases every day.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      orca_version:
+        description: Orca release (for example 1.4.237, or latest)
+        required: false
+        default: latest
+      pi_version:
+        description: Pi npm version (for example 1.3.0, or latest)
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: orca-unraid
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image name
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "IMAGE=ghcr.io/${owner}/orca-unraid" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Unraid is x86_64. Add linux/arm64 here (and QEMU) if you need arm hosts.
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Orca headless server with Pi, Docker CLI, and dind socket support
+          build-args: |
+            ORCA_VERSION=${{ inputs.orca_version || 'latest' }}
+            PI_VERSION=${{ inputs.pi_version || 'latest' }}
+            BUILD_REFRESH=${{ github.run_id }}-${{ github.run_attempt }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>Orca</Name>
+  <Repository>ghcr.io/iilaurens/orca-unraid:latest</Repository>
+  <Registry>https://github.com/iiLaurens/orca-unraid/pkgs/container/orca-unraid</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/iiLaurens/orca-unraid/issues</Support>
+  <Project>https://github.com/iiLaurens/orca-unraid</Project>
+  <Overview>Always-on Orca headless server. Runs `orca-ide serve` (orcad) and serves the Orca web client on port 6768. The image is pulled from GHCR (ghcr.io/iilaurens/orca-unraid:latest).&#xD;
+&#xD;
+Docker is the CLI only. It uses the standard /var/run/docker.sock, wired here to the separate `dind` container's socket file; this template does not mount the Unraid host Docker socket. /mnt/user is mounted at the same path here and in dind so per-workspace recipe bind mounts resolve on both sides.&#xD;
+&#xD;
+After the container starts, open the WebUI link to load the browser client. Then read the container log and paste the current `Pairing URL` into the web client. The pairing URL changes after a client pairs or when /config is reset, so read it from the log each time you add a browser.&#xD;
+&#xD;
+Orca appdata, credentials, SSH keys, agent homes, and downloaded runtimes stay in /config. Pi's own home is /config/.pi, shared agent skills are /config/.agents/skills, and both are separate appdata mounts. Project checkouts belong under /mnt/user, for example /mnt/user/development/my-repo.</Overview>
+  <Category>Productivity: Tools:Development:</Category>
+  <WebUI>http://[IP]:[PORT:6768]/web-index.html</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/iiLaurens/orca-unraid/main/orca-unraid.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/iiLaurens/orca-unraid/main/icon.png</Icon>
+  <ExtraParams>--init --restart unless-stopped</ExtraParams>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled>1792608358</DateInstalled>
+  <DonateText/>
+  <DonateLink/>
+  <Requires/>
+  <Config Name="Web UI" Target="6768" Default="6768" Mode="tcp" Description="Orca web client and runtime websocket." Type="Port" Display="always" Required="true" Mask="false">6768</Config>
+  <Config Name="Appdata" Target="/config" Default="/mnt/user/appdata/orca/config" Mode="rw" Description="Orca profile, credentials, SSH keys, and runtime cache." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/orca/config</Config>
+  <Config Name="Pi home" Target="/config/.pi" Default="/mnt/user/appdata/orca/pi" Mode="rw" Description="Pi durable home: auth, settings, extension config, trust, model cache, and installed extensions." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/orca/pi</Config>
+  <Config Name="Pi session dir" Target="PI_CODING_AGENT_SESSION_DIR" Default="/tmp/pi-sessions" Mode="" Description="Container-layer path for Pi chat sessions. Lives and dies with the container; not persisted in appdata." Type="Variable" Display="advanced" Required="false" Mask="false">/tmp/pi-sessions</Config>
+  <Config Name="Agent skills" Target="/config/.agents/skills" Default="/mnt/user/appdata/orca/skills" Mode="rw" Description="Global skills shared by Pi and other agent-skills harnesses." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/orca/skills</Config>
+  <Config Name="Shared files" Target="/mnt/user" Default="/mnt/user" Mode="rw" Description="Project checkouts and shared trees, mounted at the same path dind sees. Keep this identical to dind's /mnt view so per-workspace bind mounts resolve." Type="Path" Display="always" Required="true" Mask="false">/mnt/user</Config>
+  <Config Name="Docker socket" Target="/var/run/docker.sock" Default="/mnt/user/system/dind/etc/docker.sock" Mode="ro" Description="Read-only bind mount of the Docker daemon socket. For dind use its socket file; for a normal host daemon use /var/run/docker.sock. Read-only prevents deleting or chmod-ing the socket; it does not restrict Docker API access." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/system/dind/etc/docker.sock</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="UID that owns files created in /config and /mnt/user. Unraid's nobody is 99." Type="Variable" Display="always" Required="true" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="GID that owns files created in /config and /mnt/user. Unraid's users group is 100." Type="Variable" Display="always" Required="true" Mask="false">100</Config>
+  <Config Name="Docker socket GID" Target="DOCKER_GID" Default="100" Mode="" Description="Group ID of the dind docker.sock. The dind template starts dockerd with --group users, so this is 100 unless you changed it." Type="Variable" Display="always" Required="true" Mask="false">100</Config>
+  <Config Name="Docker host (optional)" Target="DOCKER_HOST" Default="" Mode="" Description="Leave empty to use /var/run/docker.sock. Set only for a TCP Docker daemon." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Orca port" Target="ORCA_PORT" Default="6768" Mode="" Description="Port orcad binds inside the container. Change the port mapping above in step." Type="Variable" Display="always" Required="true" Mask="false">6768</Config>
+  <Config Name="Pairing address" Target="ORCA_PAIRING_ADDRESS" Default="Tower.local" Mode="" Description="Address clients use to reach Orca. Use a LAN hostname, LAN IP, or Tailscale IP that resolves from the client. Do not use 127.0.0.1 for another machine." Type="Variable" Display="always" Required="true" Mask="false">Tower.local</Config>
+  <Config Name="Extra serve flags" Target="ORCA_SERVE_EXTRA_ARGS" Default="" Mode="" Description="Optional space-separated extra flags passed to `orca-ide serve`, for example --mobile-pairing." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="Shared orca-vm scripts" Target="ORCA_VM_SHARED" Default="/config/.agents/skills/orca-vm" Mode="" Description="Location of the shared orca-vm lifecycle scripts inside the container. Change only if you mount them elsewhere." Type="Variable" Display="advanced" Required="false" Mask="false">/config/.agents/skills/orca-vm</Config>
+  <Config Name="Timezone" Target="TZ" Default="Europe/Amsterdam" Mode="" Description="Container timezone." Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Amsterdam</Config>
+  <Config Name="UMASK" Target="UMASK" Default="022" Mode="" Description="File creation mask for new files." Type="Variable" Display="advanced" Required="false" Mask="false">022</Config>
+</Container>
