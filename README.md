@@ -35,7 +35,7 @@ The image expects these mounts:
 /mnt/user/appdata/orca/config   → /config
 /mnt/user/appdata/orca/pi       → /config/.pi
 /mnt/user/appdata/orca/skills   → /config/.agents/skills
-/mnt/user                      → /mnt/user
+/mnt/user/development          → /mnt/user/development
 /var/run/docker.sock           → /var/run/docker.sock:ro
 ```
 
@@ -59,8 +59,9 @@ the tower's `dind` socket file:
 ```
 
 Read-only prevents deleting or `chmod`-ing the socket. It does not restrict the Docker API.
-`/mnt/user` is mounted at the same path inside dind so per-workspace bind mounts resolve on both
-sides.
+Only the project tree is mounted into Orca. dind keeps the tower's full `/mnt` mount, so workspace
+bind mounts under `/mnt/user/...` (for example the recipe's `/mnt/user/development` and
+`/mnt/user/AI` mounts) resolve through dind without giving Orca access to the rest of the array.
 
 ## Updates
 
